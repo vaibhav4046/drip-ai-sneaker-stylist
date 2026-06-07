@@ -1,0 +1,156 @@
+@import 'tailwindcss';
+
+/* ============ DRIP design system — monochrome luxe + volt accent ============ */
+:root {
+  --bg: #09090b;
+  --bg-elev: #0f0f12;
+  --surface: rgba(255, 255, 255, 0.045);
+  --surface-2: rgba(255, 255, 255, 0.07);
+  --surface-3: rgba(255, 255, 255, 0.10);
+  --line: rgba(255, 255, 255, 0.09);
+  --line-2: rgba(255, 255, 255, 0.14);
+  --text: #f6f6f4;
+  --muted: #8a8a92;
+  --faint: #9a9aa2;
+  --volt: #ccff02;
+  --volt-ink: #0a0a0b;
+  --danger: #ff5470;
+  --good: #58e08a;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+* { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior-y: none;
+}
+
+#root {
+  min-height: 100%;
+  background:
+    radial-gradient(900px 480px at 100% -8%, rgba(204, 255, 2, 0.06), transparent 60%),
+    radial-gradient(700px 420px at -10% 0%, rgba(255, 255, 255, 0.04), transparent 55%),
+    var(--bg);
+}
+
+h1, h2, h3, .display { font-family: var(--font-display); letter-spacing: -0.02em; }
+
+@layer components {
+  .surface { background: var(--surface); border: 1px solid var(--line); }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+  }
+  .card-2 { background: var(--surface-2); border: 1px solid var(--line); border-radius: 22px; }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-semibold transition select-none cursor-pointer;
+    border-radius: 14px;
+    padding: 12px 18px;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { color: var(--volt-ink); background: var(--volt); }
+  .btn-primary:hover { filter: brightness(1.05); }
+  .btn-ghost { background: var(--surface-2); border: 1px solid var(--line); color: var(--text); }
+  .btn-dark { background: #16161a; border: 1px solid var(--line); color: var(--text); }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 text-sm font-medium;
+    border-radius: 999px;
+    padding: 7px 13px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+  }
+  .chip-active { background: var(--volt); color: var(--volt-ink); border-color: var(--volt); }
+  .chip { cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease; }
+  .chip:hover { border-color: var(--line-2); }
+  .chip-active:hover { border-color: var(--volt); }
+
+  .label { @apply text-xs font-semibold uppercase; letter-spacing: 0.12em; color: var(--muted); }
+  .input {
+    width: 100%; background: var(--surface-2); border: 1px solid var(--line);
+    border-radius: 14px; padding: 12px 14px; color: var(--text); outline: none;
+    font-size: 14px;
+  }
+  .input:focus { border-color: var(--line-2); }
+}
+
+.volt-text { color: var(--volt); }
+.muted { color: var(--muted); }
+
+/* interactive shoe tile — hover + press feedback */
+.shoe-tap {
+  border-radius: 24px;
+  box-shadow: 0 0 0 1px var(--line);
+  transition: box-shadow 0.18s ease, transform 0.15s ease;
+}
+.shoe-tap:hover { box-shadow: 0 0 0 2px var(--volt); }
+.shoe-tap:active { transform: scale(0.97); }
+.shoe-tap.is-selected { box-shadow: 0 0 0 2px var(--volt); }
+
+/* generic pressable */
+.press { transition: transform 0.14s ease; }
+.press:active { transform: scale(0.96); }
+
+/* image fade-in */
+.img-load { opacity: 0; transition: opacity 0.5s ease; }
+.img-load.is-loaded { opacity: 1; }
+
+/* skeleton shimmer */
+.skeleton {
+  background: linear-gradient(100deg, rgba(255,255,255,0.04) 30%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.04) 70%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* rails */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.snap-x { scroll-snap-type: x mandatory; }
+.snap-start { scroll-snap-align: start; }
+
+/* animations */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.fade-up { animation: fadeUp 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.fade-in { animation: fadeIn 0.3s ease both; }
+@keyframes pop { 0% { transform: scale(0.85); } 60% { transform: scale(1.08); } 100% { transform: scale(1); } }
+.pop { animation: pop 0.28s ease both; }
+@keyframes pulseDot { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1); } }
+.typing-dot { animation: pulseDot 1.2s infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.9s linear infinite; }
+
+/* range slider (volt) */
+input[type='range'] { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 999px; background: var(--surface-3); }
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--volt); cursor: pointer; border: 3px solid var(--bg);
+}
+
+/* keyboard focus — visible everywhere */
+:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; border-radius: 6px; }
+.input:focus-visible { border-color: var(--volt); outline: 2px solid var(--volt); outline-offset: 1px; }
+
+/* respect reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

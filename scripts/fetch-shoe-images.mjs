@@ -1,0 +1,100 @@
+// Downloads exact product images (harvested from web image search), validates,
+// resizes to a clean 800x800 webp, and self-hosts them in public/shoes/.
+// Writes src/data/localImages.js listing the ids that succeeded.
+import sharp from 'sharp'
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { resolve, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const outDir = resolve(__dirname, '..', 'public', 'shoes')
+mkdirSync(outDir, { recursive: true })
+
+const URLS = {
+  'nike-dunk-panda': 'https://sneakernews.com/wp-content/uploads/2022/01/nike-dunk-low-panda-2022-restock-dd1391-100-1.jpg',
+  'nike-af1-white': 'https://cdn.shopify.com/s/files/1/0172/7797/6630/products/IMG-6980.jpg',
+  'nike-af1-tan': 'https://cdn-images.farfetch-contents.com/19/28/80/43/19288043_42288166_1000.jpg',
+  'nike-airmax-90': 'https://www.allaboutanthony.com/wp-content/uploads/2017/10/Air-Max-90-Infrared-alt.jpg',
+  'nike-airmax-volt': 'https://cdn.sanity.io/images/c1chvb1i/production/eb66bc3d7102a3a9343250e05a77d1649eaede37-640x426.jpg',
+  'nike-vapormax': 'https://dunkhype.com/wp-content/uploads/2025/06/air-vapormax-plus-triple-black-naz3m.png',
+  'nike-pegasus': 'https://www.nike.sa/dw/image/v2/BDVB_PRD/on/demandware.static/-/Sites-akeneo-master-catalog/default/dw2a555769/nk/2d1/5/8/0/9/0/2d158090_0b1f_4a76_a453_a1e1277af85e.png',
+  'nike-airmax-97': 'https://s3.amazonaws.com/stockx-sneaker-analysis/wp-content/uploads/2017/03/Nike-Air-Max-97-Silver-Bullet-17.png',
+  'nike-dunk-red': 'https://sneakernews.com/wp-content/uploads/2020/05/NIKE-DUNK-LOW-SP-CU1727-100-RED-WHITE-3.jpg',
+  'jordan-1-chicago': 'https://storage.googleapis.com/major-prod/stock/air-jordan-1-retro-high-og-chicago-lost-found-16-12-2022-01-35-02.jpeg',
+  'jordan-1-unc': 'https://sneakernews.com/wp-content/uploads/2023/02/jordan-1-unc-dz5485-400-2.jpg',
+  'jordan-1-pollen': 'https://cdn.shopify.com/s/files/1/0408/9909/products/Air-Jordan-1-Retro-High-OG-_Pollen_---Yellow-Black-555088-701---08-07-2021---01-2.jpg',
+  'jordan-4-bred': 'https://kingwalk.com/wp-content/uploads/2020/04/Nike-Air-Jordan-4-Black-Red-Bred-3.jpg',
+  'jordan-12-red': 'https://dlmag.com/wp-content/uploads/2020/12/Air-Jordan-12-Reverse-Flu-Game-first-look_img6.jpg',
+  'adidas-samba-og': 'https://assets.adidas.com/images/h_840,f_auto,q_auto,fl_lossy,c_fill,g_auto/4c70105150234ac4b948a8bf01187e0c_9366/Samba_OG_Shoes_Black_B75807_01_standard.jpg',
+  'adidas-yeezy-zebra': 'https://images.stockx.com/images/Adidas-Yeezy-Boost-350-V2-Zebra-Product-1.jpg',
+  'adidas-ultraboost': 'https://product.hstatic.net/1000361048/product/adidas-ultraboost-light-w-8_3c490bf05445499a900dce9a98ec4b1b_master.jpg',
+  'adidas-gazelle': 'https://assets.adidas.com/images/h_840,f_auto,q_auto,fl_lossy,c_fill,g_auto/1e6e14456e0d46ae9dfd128dde1b2203_9366/Gazelle_Shoes_Green_IE5612_01_standard.jpg',
+  'adidas-campus': 'https://cdn.shopify.com/s/files/1/2358/2817/files/adidas-campus-00s-grey-white-2.png',
+  'nb-550-white': 'https://sneakerbardetroit.com/wp-content/uploads/2023/06/New-Balance-550-White-Green-BB550STA.jpg',
+  'nb-2002r': 'https://sneakersupplier.co.uk/wp-content/uploads/2023/04/New-Balance-2002R-Protection-Pack-Grey-Product.webp',
+  'nb-9060': 'https://cdn.shopify.com/s/files/1/0563/1695/2768/products/SA-SNEAKERS-New-Balance-9060-Sea-Salt-4_900x.jpg',
+  'nb-1906r': 'https://images.stockx.com/images/New-Balance-1906R-Silver-Metallic-White.jpg',
+  'converse-chuck70': 'https://cdn-images.farfetch-contents.com/25/74/86/96/25748696_55863429_1000.jpg',
+  'converse-chuck-cream': 'https://images.journeys.com/images/products/1_854943_ZM_ALT5.jpg',
+  'puma-suede': 'https://authentic-shoes.com/wp-content/uploads/2023/04/d6tqevsw0aaotge_2b03616926e743a5be170b2da562f5db.png',
+  'puma-palermo': 'https://cms-cdn.thesolesupplier.co.uk/2024/02/puma-palermo-grey-green-front_w672_h672_pad_.jpg.webp',
+  'vans-oldskool': 'https://cdn.shopify.com/s/files/1/1202/6102/products/vans-old-skool-black-white-2.jpg',
+  'vans-authentic': 'https://www.getoutsideshoes.com/cdn/shop/products/4_0_400-2.jpg',
+  'asics-gel1130': 'https://media.endclothing.com/media/f_auto,q_auto:eco,w_1600/prodmedia/media/catalog/product/0/2/02-05-24-TC_1201A256-112_4_1.jpg',
+  'asics-kayano14': 'https://cdn.shopify.com/s/files/1/2358/2817/files/asics-gel-kayano-14-cream-black-metallic-plum-3.png',
+  'asics-novablast': 'https://1sneaker.vn/wp-content/uploads/2025/03/Giay-Asics-Novablast-4-Blue-Teal-Evening-Teal-1011b693-401-2.webp',
+  'reebok-club-c': 'https://www.softmoc.com/items/images/100000155_XX6.jpg',
+  'reebok-classic': 'https://reebok.ca/cdn/shop/products/1ZttL8nHkcax9uLu9JAHP0p5z7cXSl2A.jpg',
+  'onitsuka-mexico66': 'https://cdn-images.farfetch-contents.com/21/34/50/26/21345026_51300788_1000.jpg',
+  'onitsuka-mexico-black': 'https://i.pinimg.com/736x/51/0f/02/510f021721aa3ae86d75439a5293f2be.jpg',
+  'hoka-cliftons': 'https://www.misterrunning.com/images/2023-media-01/hoka-one-one-clifton-9-scarpe-da-running-uomo-black-white-1127895-bwht_A.jpg',
+  'hoka-bondi': 'https://static.ftshp.digital/img/p/1/1/0/9/6/9/2/1109692.jpg',
+  'salomon-xt6': 'https://cdn.clothbase.com/uploads/c5a7e06f-c247-43b7-9c23-0ecc08b3354b/09-03-2023-JC_L41086600_m1_1.jpg',
+  'salomon-acs': 'https://authentic-shoes.com/wp-content/uploads/2023/08/Salomon-ACS-Pro-DSM-Lunar-Rock.png',
+  'saucony-shadow': 'https://www.careofcarl.com/bilder/artiklar/zoom/25046911r_3.jpg',
+  'saucony-jazz': 'https://cdn.clothbase.com/uploads/5d2f129e-377a-41a0-8181-bed02c5e7253/24-02-2021_BB_S2044-316_m6_1.jpg',
+}
+
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
+
+async function fetchImage(url) {
+  const origin = new URL(url).origin
+  const res = await fetch(url, {
+    headers: { 'User-Agent': UA, Referer: origin + '/', Accept: 'image/avif,image/webp,image/*,*/*' },
+    redirect: 'follow',
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const ct = res.headers.get('content-type') || ''
+  if (!ct.startsWith('image/')) throw new Error(`not image (${ct})`)
+  const buf = Buffer.from(await res.arrayBuffer())
+  if (buf.length < 6000) throw new Error(`too small (${buf.length}b)`)
+  return buf
+}
+
+const ok = []
+const fail = []
+const entries = Object.entries(URLS)
+await Promise.all(
+  entries.map(async ([id, url]) => {
+    try {
+      const buf = await fetchImage(url)
+      await sharp(buf)
+        .resize(800, 800, { fit: 'cover', position: 'centre' })
+        .webp({ quality: 82 })
+        .toFile(resolve(outDir, `${id}.webp`))
+      ok.push(id)
+    } catch (e) {
+      fail.push(`${id}: ${String(e.message || e)}`)
+    }
+  }),
+)
+
+ok.sort()
+const file = `// AUTO-GENERATED by scripts/fetch-shoe-images.mjs — ids with self-hosted exact product images.
+export const LOCAL_IMAGES = new Set(${JSON.stringify(ok)})
+export const localImage = (id) => (LOCAL_IMAGES.has(id) ? \`/shoes/\${id}.webp\` : null)
+`
+writeFileSync(resolve(__dirname, '..', 'src', 'data', 'localImages.js'), file)
+
+console.log(`OK ${ok.length}/${entries.length}`)
+console.log('FAILED:', fail.length ? '\n  ' + fail.join('\n  ') : 'none')
